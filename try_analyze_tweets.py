@@ -6,7 +6,7 @@ from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import CountVectorizer
 import numpy as np
 import matplotlib.pyplot as plt
-import igraph
+import igraph as ig
 
 load_name = "sample_tweets_MLK.json"
 
@@ -60,6 +60,7 @@ for tweet in tweetList:
 MAX_WORDS = 1000
 num_tweets = len(clean_tweets)
 
+print "count vectorizer..."
 vectorizer = CountVectorizer(analyzer = "word",
                              tokenizer = None,
                              preprocessor = None,
@@ -88,17 +89,19 @@ if verboseplot:
     plt.show()
 
 # inverse document freq normalization:
+print "inverse doc freq normalization..."
 tweet_vectors_norm = np.zeros(np.shape(tweet_vectors))
 for i_tweet in range(num_tweets):
     for i_word in range(np.shape(tweet_vectors)[1]):
         tweet_vectors_norm[i_tweet][i_word] = (tweet_vectors[i_tweet][i_word]*1.0) / word_counts[i_word] # make sure this is floating point division
 
-plt.figure
-plt.imshow(tweet_vectors_norm)
-plt.title('bag of words, normalized by count')
-plt.xlabel('words')
-plt.ylabel('tweets')
-plt.show()
+if verboseplot:
+    plt.figure
+    plt.imshow(tweet_vectors_norm)
+    plt.title('bag of words, normalized by count')
+    plt.xlabel('words')
+    plt.ylabel('tweets')
+    plt.show()
 
 ##############
 
@@ -118,12 +121,13 @@ for idx,val in enumerate(tweet_vectors_norm):
 words_together = words_together + words_together.T # fill in the upper triangle
 print "finished "
 
-plt.figure
-plt.imshow(words_together)
-plt.title('word co-occurrence matrix')
-plt.xlabel('words j')
-plt.ylabel('tweets')
-plt.show()
+if verboseplot:
+    plt.figure
+    plt.imshow(words_together)
+    plt.title('word co-occurrence matrix')
+    plt.xlabel('words j')
+    plt.ylabel('tweets')
+    plt.show()
 
 # find community structure
 
@@ -131,15 +135,12 @@ plt.show()
 
 # get the row, col indices of the non-zero elements in your adjacency matrix
 conn_indices = np.where(words_together)
-
 # get the weights corresponding to these indices
 weights = words_together[conn_indices]
-
 # a sequence of (i, j) tuples, each corresponding to an edge from i -> j
 edges = zip(*conn_indices)
-
 # initialize the graph from the edge sequence
-G = igraph.Graph(edges=edges, directed=False)
+G = ig.Graph(edges=edges, directed=False)
 
 # assign node names and weights to be attributes of the vertices and edges
 # respectively
@@ -149,9 +150,33 @@ G.es['weight'] = weights
 # I will also assign the weights to the 'width' attribute of the edges. this
 # means that igraph.plot will set the line thicknesses according to the edge
 # weights
-G.es['width'] = weights
+#G.es['width'] = weights
 
 # plot the graph, just for fun (oops need to install Cairo for this)
 #igraph.plot(G, layout="rt", labels=True, margin=80)
 
 # run the greedy community detection algorithm
+
+print ig.summary(G)
+print G.get_edgelist()[1:20]
+print G.vs['label'][1:20]
+
+# quick look at the degree histogram
+NUMBINS = 20
+if verboseplot:
+    plt.figure()
+    plt.hist(G.degree(),NUMBINS)
+    plt.title('degree distribution for the word co-occurrences graph')
+    plt.show()
+
+print "finding high modularity communities..."
+G_simple = G.simplify() # removes self loops and duplicate edges
+word_dendrogram = G.community_fastgreedy()
+print "word dendrogram " + str(word_dendrogram.merges)
+word_communities = word_dendrogram.as_clustering() # n is an optional argument here fyi
+print "word communities " + str(word_communities)
+
+for i, community in enumerate(word_communities):
+    print " community " + str(i)
+    for idx in community:
+        print vocabg[idx] + " "
