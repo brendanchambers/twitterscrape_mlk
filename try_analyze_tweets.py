@@ -22,6 +22,9 @@ print tweetList[0]['screen_name']
 print tweetList[0]['created_at']
 print tweetList[0]['text']
 
+########################################################################################
+# helper function for grabbing the data and preprocessing
+
 def tweetlist_to_words(json_tweet):
 
     ##### bag of words analysis
@@ -31,7 +34,8 @@ def tweetlist_to_words(json_tweet):
                           json_tweet['text'] )  # The text to search
 
     # notice that this isn't a good way of handling contractions
-    # note is there some way to get rid of links beforehand - also usernames from quotes
+    # note is there some way to get rid of links beforehand - also note thtat some of these words are just characters from links...
+            # and any nonsense strings are treated on equal footing with genuine dictionary words
 
     #text_full_string = " ".join(text_only)
 
@@ -46,11 +50,15 @@ def tweetlist_to_words(json_tweet):
     words_filtered = [w for w in words if not w in exclusions]
     #print words
 
-    # todo "Porter Stemming" to remove simple postfix variations
+    # todo "Porter Stemming" to merge simple postfix variations
 
     words_filtered = " ".join(words_filtered)
     #print " number of words " + str(len(words))
     return words_filtered
+
+
+########################################################################################
+# get content of tweets as a matrix, most-frequent words x counts in dimensions
 
 clean_tweets = []
 for tweet in tweetList:
@@ -88,7 +96,9 @@ if verboseplot:
     plt.ylabel('tweets')
     plt.show()
 
+#################################################################################################
 # inverse document freq normalization:
+
 print "inverse doc freq normalization..."
 tweet_vectors_norm = np.zeros(np.shape(tweet_vectors))
 for i_tweet in range(num_tweets):
@@ -103,8 +113,7 @@ if verboseplot:
     plt.ylabel('tweets')
     plt.show()
 
-##############
-
+############################################################################################
 # look into community structure within this wordcount list
 
 # these are symmetric links so just fill in the lower triangle (i > j)
@@ -129,9 +138,7 @@ if verboseplot:
     plt.ylabel('tweets')
     plt.show()
 
-# find community structure
-
-
+# find community structure by maximizing modularity with the partition:
 
 # get the row, col indices of the non-zero elements in your adjacency matrix
 conn_indices = np.where(words_together)

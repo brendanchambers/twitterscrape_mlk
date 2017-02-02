@@ -114,8 +114,8 @@ if verboseplot:
     plt.show()
 
 ############################################################################################
-# look into community structure within this wordcount list
-
+# look into community structure in the neighborhood around John AND Lewis
+verboseplot = True
 # these are symmetric links so just fill in the lower triangle (i > j)
 print "computing word co-occurrences..."
 
@@ -129,6 +129,34 @@ for idx,val in enumerate(tweet_vectors_norm):
 
 words_together = words_together + words_together.T # fill in the upper triangle
 print "finished "
+
+## todo instead of checking for equality, check for liklihood with typo models or hamming distance or something
+
+# get the indices of John and Lewis
+for i,word in enumerate(vocab):
+    if word=="lewis":
+        lewisIdx = i
+    if word=="john":
+        johnIdx = i
+    if word=="johnlewis":
+        lewisIdx = i
+        johnIdx = i
+print " john is at entry " + str(johnIdx) + " with " + str(word_counts[johnIdx]) +  " occurrences"
+print " lewis is at entry " + str(lewisIdx) + " with " + str(word_counts[lewisIdx]) + " occurrences"
+
+THRESH = 0 # consider using the expected noise floor or something
+johnNeighbors = [i for i,val in enumerate(words_together[johnIdx,:]) if val > THRESH]
+print johnNeighbors
+lewisNeighbors = [i for i,val in enumerate(words_together[lewisIdx,:]) if val > THRESH] # i.e. connected to john
+print lewisNeighbors
+neighborhood = set(johnNeighbors).union(lewisNeighbors) # temp try union to get a bigger sample
+
+# initialize the neighborhood subset
+words_together_JL = np.zeros((len(neighborhood),len(neighborhood)))
+for i,val1 in enumerate(neighborhood):
+    for j,val2 in enumerate(neighborhood):
+        words_together_JL[i][j] = words_together[val1][val2]
+words_together = words_together_JL # rename for e-z re-usal of my community detection code
 
 if verboseplot:
     plt.figure
@@ -186,4 +214,4 @@ print "word communities " + str(word_communities)
 for i, community in enumerate(word_communities):
     print " community " + str(i)
     for idx in community:
-        print vocabg[idx] + " "
+        print vocab[idx] + " "
