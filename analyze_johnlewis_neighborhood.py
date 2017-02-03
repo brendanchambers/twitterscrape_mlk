@@ -52,6 +52,9 @@ def tweetlist_to_words(json_tweet):
 
     # todo "Porter Stemming" to merge simple postfix variations
 
+    # todo I think it would be good to exclude quoted text (such a different kind of relationship than word similarity)
+    # by the same logic, would be good to exclude non-dictionary words (or words within some distance of dict words)
+
     words_filtered = " ".join(words_filtered)
     #print " number of words " + str(len(words))
     return words_filtered
@@ -115,7 +118,7 @@ if verboseplot:
 
 ############################################################################################
 # look into community structure in the neighborhood around John AND Lewis
-verboseplot = True
+#verboseplot = True
 # these are symmetric links so just fill in the lower triangle (i > j)
 print "computing word co-occurrences..."
 
@@ -211,7 +214,18 @@ print "word dendrogram " + str(word_dendrogram.merges)
 word_communities = word_dendrogram.as_clustering() # n is an optional argument here fyi
 print "word communities " + str(word_communities)
 
+community_labels = np.zeros(len(G.vs))
+print "make sure community labels are 1D, not square: " + str(np.shape(community_labels))
 for i, community in enumerate(word_communities):
     print " community " + str(i)
+    community_labels[community] = i # metadata for G
     for idx in community:
         print vocab[idx] + " "
+    file_string = "lewis community " + str(i) + ".graphml"
+    G_export = G.subgraph(community)
+    G_export.write(file_string,format="graphml") # write subgraphs
+######
+# export for gephi
+
+G.vs['community'] = community_labels
+G.write("G lewis neighborhood.graphml",format="graphml") #write the full graph
