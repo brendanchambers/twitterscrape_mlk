@@ -78,7 +78,6 @@ def searchUp(tweet_ref):   # find a parent or return []
 
     print "candidate tweets " + str(candidateTweets)
 
-
     # make a lazy check for equality on the tweet itself
     parentTweet = []
     for idx in candidateTweets:
@@ -88,8 +87,16 @@ def searchUp(tweet_ref):   # find a parent or return []
 
     return parentTweet # todo probably will have to do a better job keeping track of indices too
 
-def searchDown():
-    return None
+def searchDown(tweet_ref):
+    children = []
+    for idx,child_candidate in enumerate(tweetList):     # this is an expesive search, obviously - could use smarter data type or elastic database
+        child_text = child_candidate['text']
+        if child_text[0:2]=="RT":
+            words = child_text.split()
+            RT_user = words[1][1:-1] # pick off the '@' and the ':'
+            if RT_user == tweet_ref['screen_name']:
+                children.append(idx)
+    return children
 
 # check upward and downward from the parent tweet
 # todo, upward
