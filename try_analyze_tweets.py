@@ -186,4 +186,4 @@ print "word communities " + str(word_communities)
 for i, community in enumerate(word_communities):
     print " community " + str(i)
     for idx in community:
-        print vocabg[idx] + " "
+        print vocab[idx] + " "
