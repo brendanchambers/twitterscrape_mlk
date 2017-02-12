@@ -180,5 +180,5 @@ else: # not a retweet
 # how many retweet trees are there
 # how many unique parents and never-retweeted tweets are there
 
-
+# todo plotting
 
